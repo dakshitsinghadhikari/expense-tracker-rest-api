@@ -1,13 +1,18 @@
 from rest_framework import viewsets, permissions, generics
 from rest_framework.response import Response
+from rest_framework.filters import OrderingFilter
 
 from .models import Expense
 from .serializers import ExpenseSerializer, RegisterSerializer
 from django.db.models import Sum, Avg
 
+
 class ExpenseViewSet(viewsets.ModelViewSet):
     serializer_class = ExpenseSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [OrderingFilter]
+    ordering_fields = ['amount', 'date', 'title']
+    ordering = ['-date']
 
     def get_queryset(self):
         queryset = Expense.objects.filter(user=self.request.user)
@@ -15,6 +20,8 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         category = self.request.query_params.get('category')
         date = self.request.query_params.get('date')
         search = self.request.query_params.get('search')
+        start_date=self.request.query_params.get('start_date')
+        end_date=self.request.query_params.get('end_date')
 
         if category:
             queryset = queryset.filter(category__iexact=category)
@@ -25,14 +32,26 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         if search:
             queryset = queryset.filter(title__icontains=search)
 
+        if start_date:
+            queryset = queryset.filter(
+                date__gte = start_date
+            )
+        if end_date:
+            queryset = queryset.filter(
+                date__lte=end_date
+            )
+
+
         return queryset
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
+
 
 class ExpenseSummaryView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -53,10 +72,9 @@ class ExpenseSummaryView(generics.GenericAPIView):
         category_totals = {}
 
         for category in expenses.values_list(
-            'category',
-            flat=True
+                'category',
+                flat=True
         ).distinct():
-
             category_total = expenses.filter(
                 category=category
             ).aggregate(
