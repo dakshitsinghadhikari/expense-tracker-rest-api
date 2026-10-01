@@ -2,8 +2,8 @@ from rest_framework import viewsets, permissions, generics
 from rest_framework.response import Response
 from rest_framework.filters import OrderingFilter
 
-from .models import Expense
-from .serializers import ExpenseSerializer, RegisterSerializer
+from .models import Expense, Budget
+from .serializers import ExpenseSerializer, RegisterSerializer, BudgetSerializer
 from django.db.models import Sum, Avg
 
 
@@ -89,3 +89,16 @@ class ExpenseSummaryView(generics.GenericAPIView):
             'average_expense': average_expense,
             'category_totals': category_totals,
         })
+
+class BudgetViewSet(viewsets.ModelViewSet):
+    serializer_class = BudgetSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Budget.objects.filter(user=self.request.user)
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+

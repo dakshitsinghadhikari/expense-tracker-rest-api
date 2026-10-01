@@ -6,7 +6,7 @@ from .models import Budget
 class BudgetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Budget
-        Fields = [
+        fields = [
             'id',
             'user',
             'amount',
@@ -74,3 +74,5 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
+
+

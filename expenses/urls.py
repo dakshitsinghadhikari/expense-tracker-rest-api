@@ -1,10 +1,12 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
+from rest_framework.authtoken.views import obtain_auth_token
 
 from .views import (
     ExpenseViewSet,
     RegisterView,
-    ExpenseSummaryView
+    ExpenseSummaryView,
+    BudgetViewSet
 )
 
 router = DefaultRouter()
@@ -13,6 +15,11 @@ router.register(
     'expenses',
     ExpenseViewSet,
     basename='expense'
+)
+router.register(
+    'budgets',
+    BudgetViewSet,
+    basename='budget'
 )
 
 urlpatterns = [
@@ -26,6 +33,12 @@ urlpatterns = [
         'summary/',
         ExpenseSummaryView.as_view(),
         name='summary'
+    ),
+    path(
+        'token/',
+        obtain_auth_token,
+        name='token'
+
     ),
 ]
 
